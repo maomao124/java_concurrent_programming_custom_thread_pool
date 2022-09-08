@@ -1,5 +1,8 @@
 package mao.t1;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.locks.Condition;
@@ -20,6 +23,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class BlockingQueue<T>
 {
+    /**
+     * 日志
+     */
+    private static final Logger log = LoggerFactory.getLogger(BlockingQueue.class);
+
     /**
      * 任务队列
      */
@@ -53,6 +61,75 @@ public class BlockingQueue<T>
     public BlockingQueue(int capacity)
     {
         this.capacity = capacity;
+    }
+
+    /**
+     * 阻塞获取
+     *
+     * @return {@link T}
+     */
+    public T take()
+    {
+        lock.lock();
+        try
+        {
+            //队列为空，则一直等待
+            while (queue.isEmpty())
+            {
+                try
+                {
+                    //消费者条件变量
+                    emptyWaitSet.await();
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            //不为空
+            T t = queue.removeFirst();
+            //唤醒生产者条件变量里的线程
+            fullWaitSet.signal();
+            return t;
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * 阻塞添加
+     *
+     * @param task 任务
+     */
+    public void put(T task)
+    {
+        lock.lock();
+        try
+        {
+            //队列已满，则一直等待
+            while (queue.size() == capacity)
+            {
+                log.debug("等待加入任务队列：" + task);
+                try
+                {
+                    fullWaitSet.await();
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            //队列不为满
+            log.debug("加入任务队列：" + task);
+            queue.addLast(task);
+            emptyWaitSet.signal();
+        }
+        finally
+        {
+            lock.unlock();
+        }
     }
 
 
