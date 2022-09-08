@@ -1,5 +1,8 @@
 package mao.t1;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
@@ -19,29 +22,34 @@ import java.util.concurrent.TimeUnit;
 public class ThreadPool
 {
     /**
+     * 日志
+     */
+    private static final Logger log = LoggerFactory.getLogger(ThreadPool.class);
+
+    /**
      * 任务队列
      */
-    private BlockingQueue<Runnable> taskQueue;
+    private final BlockingQueue<Runnable> taskQueue;
 
     /**
      * 线程集合
      */
-    private HashSet<Worker> workers = new HashSet<>();
+    private final HashSet<Worker> workers = new HashSet<>();
 
     /**
      * 核心线程数大小
      */
-    private int coreSize;
+    private final int coreSize;
 
     /**
      * 获取任务时的超时时间
      */
-    private long timeout;
+    private final long timeout;
 
     /**
      * 时间单位
      */
-    private TimeUnit timeUnit;
+    private final TimeUnit timeUnit;
 
     /**
      * 拒绝策略
@@ -68,6 +76,17 @@ public class ThreadPool
     }
 
 
+    /**
+     * 执行任务
+     *
+     * @param task 任务
+     */
+    public void execute(Runnable task)
+    {
+
+    }
+
+
     class Worker extends Thread
     {
         /**
@@ -89,7 +108,32 @@ public class ThreadPool
         @Override
         public void run()
         {
-
+            // 当 task 不为空，执行任务
+            //当 task 执行完毕，再接着从任务队列获取任务并执行
+            while (task != null || (task = taskQueue.poll(timeout, timeUnit)) != null)
+            {
+                try
+                {
+                    log.debug("正在执行任务：" + task);
+                    task.run();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    //设置为空，不然会影响下一次的判断
+                    task = null;
+                }
+            }
+            //队列里也没有任务了
+            //移除
+            synchronized (workers)
+            {
+                log.debug("worker 被移除" + this);
+                workers.remove(this);
+            }
         }
     }
 
