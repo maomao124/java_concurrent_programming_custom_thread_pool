@@ -58,7 +58,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>mao.t1.Test</mainClass>
+                            <mainClass>mao.t1.Test2</mainClass>
                             <!--更改项，主类名-->
                         </manifest>
                     </archive>
