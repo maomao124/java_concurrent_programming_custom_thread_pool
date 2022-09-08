@@ -8,26 +8,42 @@ import java.util.concurrent.TimeUnit;
 /**
  * Project name(项目名称)：java并发编程_自定义线程池
  * Package(包名): mao.t1
- * Class(类名): Test
+ * Class(类名): Test2
  * Author(作者）: mao
  * Author QQ：1296193245
  * GitHub：https://github.com/maomao124/
  * Date(创建日期)： 2022/9/8
- * Time(创建时间)： 14:38
+ * Time(创建时间)： 20:38
  * Version(版本): 1.0
  * Description(描述)： 无
  */
 
-public class Test
+public class Test2
 {
     /**
      * 日志
      */
     private static final Logger log = LoggerFactory.getLogger(Test.class);
 
+    /**
+     * 得到int随机
+     *
+     * @param min 最小值
+     * @param max 最大值
+     * @return int
+     */
+    public static int getIntRandom(int min, int max)
+    {
+        if (min > max)
+        {
+            min = max;
+        }
+        return min + (int) (Math.random() * (max - min + 1));
+    }
+
     public static void main(String[] args)
     {
-        ThreadPool threadPool = new ThreadPool(3, 3, TimeUnit.SECONDS, 10, new RejectPolicy<Runnable>()
+        ThreadPool threadPool = new ThreadPool(8, 3, TimeUnit.SECONDS, 16, new RejectPolicy<Runnable>()
         {
             @Override
             public void reject(BlockingQueue<Runnable> queue, Runnable task)
@@ -46,25 +62,23 @@ public class Test
             }
         });
 
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 200; i++)
         {
-            int finalI = i;
             try
             {
+                int finalI = i;
                 threadPool.execute(new Runnable()
                 {
                     @Override
                     public void run()
                     {
-                        try
+                        long result = 0;
+                        for (int j = 0; j < 2000000000; j++)
                         {
-                            Thread.sleep(2000);
+                            //result = result + getIntRandom(0, 2);
+                            result = (result + j) / 2 + j;
                         }
-                        catch (InterruptedException e)
-                        {
-                            e.printStackTrace();
-                        }
-                        log.debug("" + finalI);
+                        log.info("序号" + finalI + "的结果：" + result);
                     }
                 });
             }
