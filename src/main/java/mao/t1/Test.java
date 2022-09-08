@@ -24,17 +24,26 @@ public class Test
 
     public static void main(String[] args)
     {
-        ThreadPool threadPool = new ThreadPool(2, 3, TimeUnit.SECONDS, 10, new RejectPolicy<Runnable>()
+        ThreadPool threadPool = new ThreadPool(3, 3, TimeUnit.SECONDS, 10, new RejectPolicy<Runnable>()
         {
             @Override
             public void reject(BlockingQueue<Runnable> queue, Runnable task)
             {
-                queue.put(task);
+                //queue.put(task);
+
+                /*boolean b = queue.offer(task, 1, TimeUnit.SECONDS);
+                if (!b)
+                {
+                    log.warn("任务" + task + "添加失败");
+                }*/
+
+                log.warn("丢弃任务：" + task);
             }
         });
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 20; i++)
         {
+            int finalI = i;
             threadPool.execute(new Runnable()
             {
                 @Override
@@ -48,6 +57,7 @@ public class Test
                     {
                         e.printStackTrace();
                     }
+                    log.debug("" + finalI);
                 }
             });
         }
