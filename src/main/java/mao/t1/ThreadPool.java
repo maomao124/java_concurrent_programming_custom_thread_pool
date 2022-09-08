@@ -83,7 +83,33 @@ public class ThreadPool
      */
     public void execute(Runnable task)
     {
+        synchronized (workers)
+        {
+            //// 当任务数没有超过coreSize时，直接交给worker对象执行
+            if (workers.size() < coreSize)
+            {
+                Worker worker = new Worker(task);
+                log.debug("task加入到队列 workers  task:" + task + "    worker:" + worker);
+                workers.add(worker);
+                worker.start();
+            }
+            //任务数超过 coreSize
+            else
+            {
+                //选择策略：
 
+                //1.一直等待
+                //taskQueue.put(task);
+                //2.超时等待
+                //taskQueue.offer(task, timeout, timeUnit);
+                //3.抛出异常，不加入等待队列
+                //throw new RuntimeException("workers队列已满! task无法加入：" + task);
+                //4.放弃任务执行，不加入等待队列
+                //log.warn("workers队列已满！task被丢弃：" + task);
+                //5.由调用者决定
+                taskQueue.tryPut(rejectPolicy, task);
+            }
+        }
     }
 
 
