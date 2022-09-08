@@ -29,7 +29,7 @@ public class Test
             @Override
             public void reject(BlockingQueue<Runnable> queue, Runnable task)
             {
-                //queue.put(task);
+                queue.put(task);
 
                 /*boolean b = queue.offer(task, 1, TimeUnit.SECONDS);
                 if (!b)
@@ -39,7 +39,7 @@ public class Test
 
                 //log.warn("丢弃任务：" + task);
 
-                throw new RuntimeException("线程池任务队列已满！task:" + task + "已被丢弃");
+                //throw new RuntimeException("线程池任务队列已满！task:" + task + "已被丢弃");
             }
         });
 
