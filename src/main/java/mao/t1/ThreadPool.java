@@ -54,7 +54,7 @@ public class ThreadPool
     /**
      * 拒绝策略
      */
-    private RejectPolicy<Runnable> rejectPolicy;
+    private final RejectPolicy<Runnable> rejectPolicy;
 
     /**
      * 构造方法，线程池

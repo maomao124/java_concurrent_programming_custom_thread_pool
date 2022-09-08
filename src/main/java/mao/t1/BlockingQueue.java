@@ -32,22 +32,22 @@ public class BlockingQueue<T>
     /**
      * 任务队列
      */
-    private Deque<T> queue = new ArrayDeque<>();
+    private final Deque<T> queue = new ArrayDeque<>();
 
     /**
      * 锁
      */
-    private ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * 生产者条件变量
      */
-    private Condition fullWaitSet = lock.newCondition();
+    private final Condition fullWaitSet = lock.newCondition();
 
     /**
      * 消费者条件变量
      */
-    private Condition emptyWaitSet = lock.newCondition();
+    private final Condition emptyWaitSet = lock.newCondition();
 
     /**
      * 队列的容量
