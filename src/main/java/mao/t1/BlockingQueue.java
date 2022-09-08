@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -132,7 +133,132 @@ public class BlockingQueue<T>
         }
     }
 
+    /**
+     * 带超时阻塞获取
+     *
+     * @param timeout 超时
+     * @param unit    单位
+     * @return {@link T}
+     */
+    public T poll(long timeout, TimeUnit unit)
+    {
+        lock.lock();
+        try
+        {
+            long nanos = unit.toNanos(timeout);
+            //队列为空，则一直等待
+            while (queue.isEmpty())
+            {
+                try
+                {
+                    if (nanos <= 0)
+                    {
+                        return null;
+                    }
+                    nanos = emptyWaitSet.awaitNanos(nanos);
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            //不为空
+            T t = queue.removeFirst();
+            //唤醒生产者条件变量里的线程
+            fullWaitSet.signal();
+            return t;
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
 
+    /**
+     * 带超时时间阻塞添加
+     *
+     * @param task     任务
+     * @param timeout  超时
+     * @param timeUnit 时间单位
+     * @return boolean
+     */
+    public boolean offer(T task, long timeout, TimeUnit timeUnit)
+    {
+        lock.lock();
+        try
+        {
+            long nanos = timeUnit.toNanos(timeout);
+            //队列已满，则一直等待
+            while (queue.size() == capacity)
+            {
+                if (nanos <= 0)
+                {
+                    return false;
+                }
+                log.debug("等待加入任务队列：" + task);
+                try
+                {
+                    nanos = fullWaitSet.awaitNanos(nanos);
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            //队列不为满
+            log.debug("加入任务队列：" + task);
+            queue.addLast(task);
+            emptyWaitSet.signal();
+            return true;
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
 
+    /**
+     * 获取队列大小
+     *
+     * @return int
+     */
+    public int size()
+    {
+        lock.lock();
+        try
+        {
+            return queue.size();
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
 
+    /**
+     * @param rejectPolicy 拒绝策略
+     * @param task         任务
+     */
+    public void tryPut(RejectPolicy<T> rejectPolicy, T task)
+    {
+        lock.lock();
+        try
+        {
+            // 判断队列是否满
+            if (queue.size() == capacity)
+            {
+                rejectPolicy.reject(this, task);
+            }
+            else
+            {
+                log.debug("加入任务队列：" + task);
+                queue.addLast(task);
+                emptyWaitSet.signal();
+            }
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
 }

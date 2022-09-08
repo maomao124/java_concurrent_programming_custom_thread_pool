@@ -1,6 +1,5 @@
 package mao.t1;
 
-import java.util.concurrent.BlockingQueue;
 
 /**
  * Project name(项目名称)：java并发编程_自定义线程池
