@@ -37,29 +37,39 @@ public class Test
                     log.warn("任务" + task + "添加失败");
                 }*/
 
-                log.warn("丢弃任务：" + task);
+                //log.warn("丢弃任务：" + task);
+
+                throw new RuntimeException("线程池任务队列已满！task:" + task + "已被丢弃");
             }
         });
 
         for (int i = 0; i < 20; i++)
         {
             int finalI = i;
-            threadPool.execute(new Runnable()
+            try
             {
-                @Override
-                public void run()
+                threadPool.execute(new Runnable()
                 {
-                    try
+                    @Override
+                    public void run()
                     {
-                        Thread.sleep(2000);
+                        try
+                        {
+                            Thread.sleep(2000);
+                        }
+                        catch (InterruptedException e)
+                        {
+                            e.printStackTrace();
+                        }
+                        log.debug("" + finalI);
                     }
-                    catch (InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    log.debug("" + finalI);
-                }
-            });
+                });
+            }
+            catch (RuntimeException e)
+            {
+                //处理异常
+                e.printStackTrace();
+            }
         }
     }
 }
