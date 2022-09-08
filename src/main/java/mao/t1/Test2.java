@@ -43,7 +43,18 @@ public class Test2
 
     public static void main(String[] args)
     {
-        ThreadPool threadPool = new ThreadPool(8, 3, TimeUnit.SECONDS, 16, new RejectPolicy<Runnable>()
+        int coreSize;
+        try
+        {
+            int i1 = Integer.parseInt(args[0]);
+            coreSize = i1;
+        }
+        catch (Exception e)
+        {
+            coreSize = Runtime.getRuntime().availableProcessors();
+        }
+        log.info("线程数：" + coreSize);
+        ThreadPool threadPool = new ThreadPool(coreSize, 3, TimeUnit.SECONDS, 16, new RejectPolicy<Runnable>()
         {
             @Override
             public void reject(BlockingQueue<Runnable> queue, Runnable task)
@@ -61,6 +72,18 @@ public class Test2
                 //throw new RuntimeException("线程池任务队列已满！task:" + task + "已被丢弃");
             }
         });
+
+        long start = System.currentTimeMillis();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                long end = System.currentTimeMillis();
+                log.info("运行时间：" + (end - start) + "ms");
+            }
+        }));
 
         for (int i = 0; i < 200; i++)
         {
