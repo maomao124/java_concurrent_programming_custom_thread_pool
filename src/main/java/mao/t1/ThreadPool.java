@@ -106,7 +106,7 @@ public class ThreadPool
                 //throw new RuntimeException("workers队列已满! task无法加入：" + task);
                 //4.放弃任务执行，不加入等待队列
                 //log.warn("workers队列已满！task被丢弃：" + task);
-                //5.由调用者决定
+                //5.由调用者决定，队列满时...
                 taskQueue.tryPut(rejectPolicy, task);
             }
         }
